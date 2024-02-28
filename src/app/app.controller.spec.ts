@@ -2,12 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { OperationDto } from './dto/operation.dto';
+import { PrismaModule } from '../prisma/prisma.module';
 
 describe('AppController', () => {
   let appController: AppController;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
+      imports: [PrismaModule],
       controllers: [AppController],
       providers: [AppService],
     }).compile();
@@ -24,9 +26,7 @@ describe('AppController', () => {
       };
       expect(appController.createOperation(body)).toBe('2');
     });
-  });
 
-  describe('root', () => {
     it('sqrt(16) should return "4"', () => {
       const body: OperationDto = {
         operator: 'SQR',

@@ -18,7 +18,7 @@ async function bootstrap() {
     .setTitle('Loan Pro Challenge API')
     .setDescription('The Loan Pro Challenge API description')
     .setVersion('1.0')
-    .addTag('challenge')
+    .addBasicAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
