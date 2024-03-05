@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Post,
   Query,
@@ -16,6 +18,8 @@ import { OperationModel, RecordModel } from './model/types';
 import { GetAuthUser } from 'src/auth/decorators/get-auth-user.decorator';
 import { RecordResponseDto } from './dto/responses.dto';
 import { plainToClass } from 'class-transformer';
+import { filter } from 'rxjs';
+import { BalanceDto } from './dto/balance.dto';
 
 @Controller()
 @IsAuthenticated()
@@ -41,26 +45,44 @@ export class AppController {
     return this.appService.getCosts();
   }
 
+  @Get('/balance')
+  getBalance(@GetAuthUser() loggedUser: string): Promise<BalanceDto> {
+    return this.appService.getLastRecord(loggedUser).then((r) =>
+      plainToClass(BalanceDto, {
+        username: loggedUser,
+        user_balance: r.user_balance.toNumber().toFixed(2),
+      }),
+    );
+  }
+
   @Get('/records')
   @ApiQuery({ name: 'skip', example: 0 })
   @ApiQuery({ name: 'take', example: 10 })
+  @ApiQuery({ name: 'filter', required: false })
+  @ApiQuery({ name: 'inverseOrder', example: true, required: false })
   getRecords(
     @GetAuthUser() loggedUser: string,
-    @Query('skip', ParseIntPipe)
+    @Query('skip', new ParseIntPipe({ optional: true }))
     skip: number,
-    @Query('take', ParseIntPipe)
+    @Query('take', new ParseIntPipe({ optional: true }))
     take: number,
+    @Query('filter')
+    filter: string = '',
+    @Query('inverseOrder', new ParseBoolPipe({ optional: true }))
+    inverseOrder: boolean = true,
   ): Promise<RecordResponseDto[]> {
-    return this.appService.getRecords(loggedUser, skip, take).then((records) =>
-      records.map((r) =>
-        plainToClass(RecordResponseDto, {
-          id: r.id,
-          description: r.description,
-          operation_response: r.operation_response,
-          user_balance: r.user_balance.toNumber,
-        }),
-      ),
-    );
+    return this.appService
+      .getRecords(loggedUser, skip, take, filter, inverseOrder)
+      .then((records) =>
+        records.map((r) =>
+          plainToClass(RecordResponseDto, {
+            id: r.id,
+            description: r.description,
+            operation_response: r.operation_response,
+            user_balance: r.user_balance.toNumber().toFixed(2),
+          }),
+        ),
+      );
   }
 
   @Delete('/records/:id')

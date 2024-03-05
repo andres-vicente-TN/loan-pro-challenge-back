@@ -14,6 +14,8 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
+  app.enableCors();
+
   const config = new DocumentBuilder()
     .setTitle('Loan Pro Challenge API')
     .setDescription('The Loan Pro Challenge API description')

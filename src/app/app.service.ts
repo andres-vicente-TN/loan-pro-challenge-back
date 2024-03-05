@@ -70,6 +70,18 @@ export class AppService {
   }
 
   /**
+   * @returns Last user record
+   */
+  getLastRecord(loggedUser: string): Promise<RecordModel> {
+    return this.prisma.records.findFirst({
+      where: {
+        user: { username: loggedUser },
+      },
+      orderBy: { id: 'desc' },
+    });
+  }
+
+  /**
    * @param loggedUser
    * @returns All user's records
    */
@@ -77,11 +89,16 @@ export class AppService {
     loggedUser: string,
     skip: number,
     take: number,
-    // filter: string, TODO: add
-    // orderBy: string, TODO: add
+    filter: string,
+    inverseOrder: boolean,
   ): Promise<RecordModel[]> {
     return this.prisma.records.findMany({
-      where: { user: { username: loggedUser }, deleted: false },
+      where: {
+        user: { username: loggedUser },
+        deleted: false,
+        description: { contains: filter },
+      },
+      orderBy: { id: inverseOrder === true ? 'desc' : 'asc' },
       skip: skip,
       take: take,
     });
